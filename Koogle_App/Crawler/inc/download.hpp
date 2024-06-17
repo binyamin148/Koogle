@@ -10,7 +10,7 @@ public:
     Download() = default;
     ~Download() = default;
 
-    static std::string download_html(const std::string& url);
+    static std::string download_html(const std::string &url);
 };
 
 #endif // DOWNLOAD_HPP
