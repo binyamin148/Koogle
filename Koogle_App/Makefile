@@ -6,10 +6,10 @@ CC = $(CXX)
 CXXFLAGS = -std=c++17 -pedantic -Wall -Wconversion -Werror -pthread
 
 # Libraries
-LIBS = -lcurl -lcurlpp -lxml2 -ltidy -lhtmlcxx $(shell pkg-config --libs libmongocxx) -lssl -lcrypto
+LIBS = -lcurl -lcurlpp -lxml2 -ltidy -lhtmlcxx $(shell pkg-config --libs libmongocxx) -lssl -lcrypto -lgumbo
 
 # Include flags
-CPPFLAGS = -I/usr/include/libxml2 -I/usr/include/htmlcxx $(shell pkg-config --cflags libmongocxx)
+CPPFLAGS = -I/usr/include/libxml2 -I/usr/include/libxml2/libxml -I/usr/include/htmlcxx $(shell pkg-config --cflags libmongocxx)
 
 # Linker flags
 LDFLAGS = -Wl,-rpath,/usr/local/lib

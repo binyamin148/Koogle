@@ -1,61 +1,57 @@
 #include "../inc/parser.hpp"
 
-#include <regex>
-#include <iostream>
-#include <sstream>
-#include <set>
-#include <algorithm>
-#include <cctype>
-#include <htmlcxx/html/ParserDom.h>
-
-void Parser::remove_punctuation(std::string &word)
-{
-    word.erase(std::remove_if(word.begin(), word.end(), ispunct), word.end());
-}
-
-std::vector<std::string> Parser::extract_url(const std::string &str)
-{
-    std::vector<std::string> urls;
-    std::regex regex_pattern(R"(<a href=\"(https?://[^\"]+)\")");
-    std::smatch match;
-
-    std::string::const_iterator search_start(str.cbegin());
-    while (std::regex_search(search_start, str.cend(), match, regex_pattern))
-    {
-        urls.push_back(match[1].str());
-        search_start = match.suffix().first;
+void HtmlParser::extract_urls(GumboNode* node, std::vector<std::string>& urls) {
+    if (node->type != GUMBO_NODE_ELEMENT) {
+        return;
     }
-    return urls;
+    GumboAttribute* href;
+    if (node->v.element.tag == GUMBO_TAG_A &&
+        (href = gumbo_get_attribute(&node->v.element.attributes, "href"))) {
+        urls.push_back(href->value);
+    }
+    const GumboVector* children = &node->v.element.children;
+    for (unsigned int i = 0; i < children->length; ++i) {
+        extract_urls(static_cast<GumboNode*>(children->data[i]), urls);
+    }
 }
 
-std::vector<std::string> Parser::extract_words(const std::string &str)
-{
+void HtmlParser::extract_text(GumboNode* node, std::string& output) {
+    if (node->type == GUMBO_NODE_TEXT) {
+        output.append(node->v.text.text);
+        output.append(" ");
+    } else if (node->type == GUMBO_NODE_ELEMENT && node->v.element.tag != GUMBO_TAG_SCRIPT && node->v.element.tag != GUMBO_TAG_STYLE) {
+        const GumboVector* children = &node->v.element.children;
+        for (unsigned int i = 0; i < children->length; ++i) {
+            extract_text(static_cast<GumboNode*>(children->data[i]), output);
+        }
+    }
+}
+
+std::vector<std::string> HtmlParser::split_words(const std::string& text) {
     std::vector<std::string> words;
-    htmlcxx::HTML::ParserDom parser;
-    auto dom = parser.parseTree(str);
-
-    std::set<std::string> non_visible_tags = {"style", "script", "noscript", "meta", "link"};
-
-    for (auto it = dom.begin(); it != dom.end(); ++it)
-    {
-        if (it->isTag() && non_visible_tags.find(it->tagName()) != non_visible_tags.end())
-        {
-            it.skip_children();
-        }
-        else if (!it->isTag() && !it->isComment())
-        {
-            std::istringstream iss(it->text());
-            std::string word;
-            while (iss >> word)
-            {
-                remove_punctuation(word);
-                if (!word.empty())
-                {
-                    words.push_back(word);
-                }
-            }
+    std::string word;
+    for (char c : text) {
+        if (std::isalnum(c)) {
+            word += c;
+        } else if (!word.empty()) {
+            words.push_back(word);
+            word.clear();
         }
     }
-
+    if (!word.empty()) {
+        words.push_back(word);
+    }
     return words;
+}
+
+void HtmlParser::parse_html(const std::string& html, std::vector<std::string>& urls, std::vector<std::string>& words) {
+    GumboOutput* output = gumbo_parse(html.c_str());
+    
+    extract_urls(output->root, urls);
+
+    std::string text;
+    extract_text(output->root, text);
+    words = split_words(text);
+
+    gumbo_destroy_output(&kGumboDefaultOptions, output);
 }
