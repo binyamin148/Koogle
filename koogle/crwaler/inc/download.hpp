@@ -1,8 +1,8 @@
 #ifndef DOWNLOAD_HPP
 #define DOWNLOAD_HPP
 
-#include <string>
 #include <vector>
+#include <string>
 
 class Download
 {
@@ -13,4 +13,4 @@ public:
     static std::string download_html(const std::string &url);
 };
 
-#endif // DOWNLOAD_HPP
+#endif

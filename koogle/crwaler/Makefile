@@ -6,32 +6,30 @@ CC = $(CXX)
 CXXFLAGS = -std=c++17 -pedantic -Wall -Wconversion -Werror -pthread
 
 # Libraries
-LIBS = -lcurl -lcurlpp -lxml2 -ltidy -lhtmlcxx $(shell pkg-config --libs libmongocxx) -lssl -lcrypto -lgumbo
+LIBS = -lcurl -lcurlpp -lxml2 -ltidy -lhtmlcxx $(shell pkg-config --libs libmongocxx) -lssl -lcrypto
 
 # Include flags
-CPPFLAGS = -I/usr/include/libxml2 -I/usr/include/libxml2/libxml -I/usr/include/htmlcxx $(shell pkg-config --cflags libmongocxx)
+CPPFLAGS = -I/usr/include/libxml2 -I/usr/include/htmlcxx $(shell pkg-config --cflags libmongocxx)
 
 # Linker flags
 LDFLAGS = -Wl,-rpath,/usr/local/lib
 
 # Directories
-SRC_DIR := Crawler/src
-INC_DIR := Crawler/inc
+SRC_DIR := src
+INC_DIR := inc
 OBJ_DIR := obj
-ROOT_DIR := .
 
 # Source files
-SRCS := $(wildcard $(SRC_DIR)/*.cpp) $(ROOT_DIR)/main.cpp
+SRCS := $(wildcard $(SRC_DIR)/*.cpp)
 # Object files
 OBJS := $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRCS))
-OBJS := $(patsubst $(ROOT_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(OBJS))
 
 # Main target
-main: $(OBJS)
+main: $(OBJS) $(OBJ_DIR)/main.o
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) $(LDFLAGS) -o $@ $^ $(LIBS)
 
 # Compile main.cpp
-$(OBJ_DIR)/main.o: $(ROOT_DIR)/main.cpp | $(OBJ_DIR)
+$(OBJ_DIR)/main.o: main.cpp | $(OBJ_DIR)
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
 
 # Compile all source files
