@@ -5,16 +5,19 @@
 #include <string>
 #include <sstream>
 
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <sstream>
-#include <vector>
-#include <regex>
 #include <htmlcxx/html/ParserDom.h>
 #include <algorithm>
 #include <cctype>
 
+/**
+ * @brief Extracts URLs from the given HTML string.
+ *
+ * This function searches for anchor tags in the HTML string and extracts
+ * the URLs from the href attributes.
+ *
+ * @param str The HTML string to parse.
+ * @return A vector of strings containing the extracted URLs.
+ */
 std::vector<std::string> Parser::extract_url(const std::string &str)
 {
     std::vector<std::string> urls;
@@ -33,6 +36,16 @@ std::vector<std::string> Parser::extract_url(const std::string &str)
     return urls;
 }
 
+/**
+ * @brief Extracts words from the given HTML string.
+ *
+ * This function parses the HTML string, ignoring content within non-visible
+ * tags such as style, script, and meta, and extracts the visible text content
+ * into a list of words.
+ *
+ * @param str The HTML string to parse.
+ * @return A vector of strings containing the extracted words.
+ */
 std::vector<std::string> Parser::extract_words(const std::string &str)
 {
     std::vector<std::string> words;
@@ -67,6 +80,14 @@ std::vector<std::string> Parser::extract_words(const std::string &str)
     return words;
 }
 
+/**
+ * @brief Removes punctuation from the given word.
+ *
+ * This function modifies the input string by removing punctuation
+ * characters from the beginning and end of the word.
+ *
+ * @param word The word from which to remove punctuation.
+ */
 void Parser::remove_punctuation(std::string &word)
 {
     word.erase(word.begin(), std::find_if(word.begin(), word.end(), [](unsigned char ch)
