@@ -9,28 +9,90 @@
 #include <condition_variable>
 #include <vector>
 
+/**
+ * @class MyQueue
+ * @brief A thread-safe multi-level queue.
+ *
+ * This class provides a thread-safe implementation of a multi-level queue using
+ * vectors of queues. It uses condition variables to handle synchronization between
+ * threads and supports a special task when all threads are waiting.
+ *
+ * @tparam T The type of elements stored in the queues.
+ */
 template <typename T>
 class MyQueue
 {
 private:
-    std::vector<std::queue<T>> m_queue;
-    mutable std::mutex mtx;
-    std::condition_variable cond_not_empty;
-    std::condition_variable cond_not_full;
+    std::vector<std::queue<T>> m_queue;   ///< Vector of queues for multi-level storage.
+    mutable std::mutex mtx;               ///< Mutex for synchronizing access to the queues.
+    std::condition_variable cond_not_empty; ///< Condition variable for waiting when the queue is empty.
+    std::condition_variable cond_not_full;  ///< Condition variable for waiting when the queue is full.
 
-    size_t size_threads_waiting = 0;
+    size_t size_threads_waiting = 0;      ///< Counter for the number of waiting threads.
 
+    /**
+     * @brief Checks if all the queues are empty.
+     *
+     * @return True if all queues are empty, false otherwise.
+     */
     bool empty() const;
+
+    /**
+     * @brief Helper function to pop an element from the front of the non-empty queue.
+     *
+     * @param e The element to pop.
+     * @param index The index of the queue from which the element was popped.
+     * @return True if an element was popped, false otherwise.
+     */
     bool help_front_pop(T &e, size_t &index);
 
 public:
+    /**
+     * @brief Default constructor for MyQueue.
+     */
     MyQueue();
+
+    /**
+     * @brief Default destructor for MyQueue.
+     */
     ~MyQueue();
 
+    /**
+     * @brief Pushes an element onto the specified queue.
+     *
+     * This function adds a new element to the queue at the specified depth.
+     *
+     * @param e The element to push onto the queue.
+     * @param depth The depth (index) of the queue to push the element into.
+     */
     void push(T const &e, const size_t &depth);
+
+    /**
+     * @brief Pops an element from the front of the queue.
+     *
+     * This function removes an element from the front of the first non-empty
+     * queue. If all queues are empty, it will wait until an element is available.
+     *
+     * @param e The element to pop from the queue.
+     * @param index The index of the queue from which the element was popped.
+     * @return True if an element was popped, false otherwise.
+     */
     bool pop(T &e, size_t &index);
 
+    /**
+     * @brief Performs a special task when all threads are waiting.
+     *
+     * This function pushes a special element (POISON_APPLE) into the first queue
+     * when all threads are waiting, signaling them to stop.
+     */
     void special_task();
+
+    /**
+     * @brief Checks if all threads are waiting and triggers the special task if so.
+     *
+     * This function checks if the number of waiting threads equals the total number
+     * of threads and calls special_task if true.
+     */
     void check_finish();
 };
 
@@ -119,7 +181,7 @@ void MyQueue<T>::check_finish()
     if (size_threads_waiting == Settings::NUM_THREADS)
     {
         this->special_task();
-        cond_not_empty.notify_all(); 
+        cond_not_empty.notify_all();
     }
 }
 
